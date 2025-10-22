@@ -148,7 +148,7 @@
                             android:layout_height="16dp"
                             android:src="@drawable/ic_aqi"
                             android:layout_marginEnd="6dp"
-                            app:tint="@android:color/white" />
+                             />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -201,7 +201,7 @@
                             android:layout_height="16dp"
                             android:src="@drawable/rainn"
                             android:layout_marginEnd="6dp"
-                            app:tint="@android:color/white" />
+                            />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -253,7 +253,7 @@
                             android:layout_height="16dp"
                             android:src="@drawable/humidity"
                             android:layout_marginEnd="6dp"
-                            app:tint="@android:color/white" />
+                             />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -305,7 +305,7 @@
                             android:layout_height="16dp"
                             android:src="@drawable/wind"
                             android:layout_marginEnd="6dp"
-                            app:tint="@android:color/white" />
+                             />
 
                         <TextView
                             android:layout_width="wrap_content"
