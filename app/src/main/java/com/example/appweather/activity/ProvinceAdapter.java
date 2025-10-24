@@ -1,4 +1,4 @@
-package com.example.appweather;
+package com.example.appweather.activity;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+import com.example.appweather.R;
 
 import java.util.ArrayList;
 import java.util.List;

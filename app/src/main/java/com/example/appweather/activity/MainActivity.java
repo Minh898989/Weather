@@ -1,9 +1,9 @@
-package com.example.appweather;
+package com.example.appweather.activity;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.appweather.WeatherBackgroundHelper;
-import com.example.appweather.ProvinceAdapter;
+
+import com.example.appweather.R;
 
 
 import android.os.Bundle;
@@ -11,8 +11,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;

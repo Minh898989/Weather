@@ -1,4 +1,4 @@
-package com.example.appweather;
+package com.example.appweather.activity;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.example.appweather.R;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

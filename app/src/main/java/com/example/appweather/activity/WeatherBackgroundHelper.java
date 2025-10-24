@@ -1,6 +1,9 @@
-package com.example.appweather;
+package com.example.appweather.activity;
 
 import android.view.View;
+
+import com.example.appweather.R;
+
 import java.util.Locale;
 
 public class WeatherBackgroundHelper {

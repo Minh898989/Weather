@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "com.example.appweather"
-    compileSdk = 36
+    compileSdk = 34 // <-- SỬA Ở ĐÂY: từ 36 xuống 34
 
     defaultConfig {
         applicationId = "com.example.appweather"
         minSdk = 27
-        targetSdk = 36
+        targetSdk = 34 // <-- SỬA Ở ĐÂY: từ 36 xuống 34
         versionCode = 1
         versionName = "1.0"
 
@@ -26,17 +26,24 @@ android {
         }
     }
     compileOptions {
+        // Giữ nguyên các tùy chọn này
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
 dependencies {
-
+    // Phần dependencies của bạn đã đúng, không cần thay đổi
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+
+    // Retrofit & Gson for API calls
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

@@ -1,4 +1,4 @@
-package com.example.appweather;
+package com.example.appweather.activity;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.appweather.R;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 public class InfoDetailDialog {
