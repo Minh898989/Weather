@@ -2,6 +2,9 @@ package com.example.appweather;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.appweather.WeatherBackgroundHelper;
+import com.example.appweather.ProvinceAdapter;
+
 
 import android.os.Bundle;
 import android.text.Editable;
@@ -14,6 +17,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,15 +33,40 @@ public class MainActivity extends AppCompatActivity {
     TextView tvCity;
     ImageView iconSettings;
 
+    RelativeLayout rootLayout;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setupHourlyForecast();
+
         cityBar = findViewById(R.id.cityBar);
         tvCity = findViewById(R.id.tvCity);
         iconSettings = findViewById(R.id.iconSettings);
         hourlyContainer = findViewById(R.id.hourlyContainer);
+        rootLayout = findViewById(R.id.rootLayout);
+        setupHourlyForecast();
+        LinearLayout layoutFiveDay = findViewById(R.id.layoutFiveDay);
+        FiveDayForecastHelper.setupFiveDayForecast(this, layoutFiveDay);
+        InfoDetailDialog infoDialog = new InfoDetailDialog(this);
+        LinearLayout cardAQI = findViewById(R.id.cardAQI);
+        LinearLayout cardPrecipitation = findViewById(R.id.cardPrecipitation);
+        LinearLayout cardHumidity = findViewById(R.id.cardHumidity);
+        LinearLayout cardWind = findViewById(R.id.cardWind);
+
+        cardAQI.setOnClickListener(v ->
+                infoDialog.show("Air Quality Index (AQI)", "24", "Không khí trong lành, rất tốt cho sức khỏe.", R.drawable.ic_aqi));
+
+        cardPrecipitation.setOnClickListener(v ->
+                infoDialog.show("Precipitation", "0.1 mm", "Lượng mưa rất nhỏ, thời tiết khô ráo.", R.drawable.rainn));
+
+        cardHumidity.setOnClickListener(v ->
+                infoDialog.show("Humidity", "78%", "Độ ẩm khá cao, cảm giác hơi oi.", R.drawable.humidity));
+
+        cardWind.setOnClickListener(v ->
+                infoDialog.show("Wind", "5.2 km/h", "Gió nhẹ, thoải mái khi di chuyển ngoài trời.", R.drawable.wind));
+
 
         cityBar.setOnClickListener(v -> showProvinceDialog());
 
@@ -54,7 +83,11 @@ public class MainActivity extends AppCompatActivity {
         SimpleDateFormat hourFormat = new SimpleDateFormat("ha", Locale.getDefault());
 
         int[] fakeTemps = {27, 28, 29, 30, 29, 28, 27};
-        String[] fakeWeather = {"cloudy", "sunny", "rain", "overcast", "sunny", "cloudy", "rain"};
+        String[] fakeWeather = {"cloudy", "sunny", "rain_light", "rain_heavy", "sunny", "cloudy", "rain_heavy"};
+
+        String currentWeather = fakeWeather[0];
+        boolean isNight = (calendar.get(Calendar.HOUR_OF_DAY) >= 19 || calendar.get(Calendar.HOUR_OF_DAY) < 6);
+        WeatherBackgroundHelper.updateBackground(rootLayout, currentWeather, isNight);
 
         for (int i = 0; i < fakeTemps.length; i++) {
             LinearLayout itemView = (LinearLayout) inflater.inflate(R.layout.item_hour_forecast, container, false);
@@ -63,26 +96,28 @@ public class MainActivity extends AppCompatActivity {
             TextView tvHour = itemView.findViewById(R.id.tvHour);
             ImageView ivWeather = itemView.findViewById(R.id.ivWeather);
 
-            String label = hourFormat.format(calendar.getTime());
+            String label = (i == 0) ? "Now" : hourFormat.format(calendar.getTime());
             tvHour.setText(label);
             tvTemp.setText(fakeTemps[i] + "°");
+
 
             int hour = calendar.get(Calendar.HOUR_OF_DAY);
             String weather = fakeWeather[i];
             int iconRes;
 
 
-            if (!weather.equals("rain") && (hour >= 19 || hour < 6)) {
+            if (!weather.equals("rain_light") && !weather.equals("rain_heavy")
+                    && (hour >= 19 || hour < 6)) {
                 iconRes = R.drawable.moon;
             } else {
                 switch (weather) {
                     case "sunny":
                         iconRes = R.drawable.ic_sunny;
                         break;
-                    case "rain":
+                    case "rain_ligh":
                         iconRes = R.drawable.ic_rainy;
                         break;
-                    case "overcast":
+                    case "rain_heavy":
                         iconRes = R.drawable.drizzle;
                         break;
                     case "moon":
@@ -114,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
         EditText searchBox = dialogView.findViewById(R.id.searchBox);
         ListView listView = dialogView.findViewById(R.id.listViewProvinces);
 
-        ProvinceAdapter adapter = new ProvinceAdapter(provinceList);
+        ProvinceAdapter adapter = new ProvinceAdapter(this, provinceList);
         listView.setAdapter(adapter);
 
         AlertDialog dialog = builder.create();
@@ -146,52 +181,5 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private class ProvinceAdapter extends ArrayAdapter<String> {
-        private List<String> originalList;
-        private List<String> filteredList;
 
-        public ProvinceAdapter(List<String> provinces) {
-            super(MainActivity.this, 0, provinces);
-            this.originalList = new ArrayList<>(provinces);
-            this.filteredList = new ArrayList<>(provinces);
-        }
-
-        @Override
-        public int getCount() {
-            return filteredList.size();
-        }
-
-        @Override
-        public String getItem(int position) {
-            return filteredList.get(position);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext())
-                        .inflate(R.layout.item_province, parent, false);
-            }
-
-            TextView tvProvinceName = convertView.findViewById(R.id.tvProvinceName);
-            tvProvinceName.setText(filteredList.get(position));
-
-            return convertView;
-        }
-
-        public void filter(String query) {
-            filteredList.clear();
-            if (query.isEmpty()) {
-                filteredList.addAll(originalList);
-            } else {
-                String lowerCaseQuery = query.toLowerCase();
-                for (String province : originalList) {
-                    if (province.toLowerCase().contains(lowerCaseQuery)) {
-                        filteredList.add(province);
-                    }
-                }
-            }
-            notifyDataSetChanged();
-        }
-    }
 }

@@ -1,6 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient"
@@ -104,6 +105,38 @@
                     android:orientation="horizontal"
                     android:paddingVertical="8dp"/>
             </HorizontalScrollView>
+
+            <LinearLayout
+                android:id="@+id/fiveDayCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/item_five_days"
+                android:padding="12dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5-Day Forecast"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:id="@+id/layoutFiveDay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:dividerPadding="4dp"
+                    android:showDividers="middle" />
+
+            </LinearLayout>
+
+
+
             <TextView
                 android:text="Today's details"
                 android:textColor="@android:color/white"
@@ -128,6 +161,7 @@
 
 
                 <LinearLayout
+                    android:id="@+id/cardAQI"
                     android:layout_width="0dp"
                     android:layout_height="150dp"
                     android:layout_margin="8dp"
@@ -181,6 +215,7 @@
 
 
                 <LinearLayout
+                    android:id="@+id/cardPrecipitation"
                     android:layout_width="0dp"
                     android:layout_height="150dp"
                     android:layout_margin="8dp"
@@ -233,6 +268,7 @@
 
 
                 <LinearLayout
+                    android:id="@+id/cardHumidity"
                     android:layout_width="0dp"
                     android:layout_height="150dp"
                     android:layout_margin="8dp"
@@ -285,6 +321,7 @@
 
 
                 <LinearLayout
+                    android:id="@+id/cardWind"
                     android:layout_width="0dp"
                     android:layout_height="150dp"
                     android:layout_margin="8dp"
@@ -305,7 +342,8 @@
                             android:layout_height="16dp"
                             android:src="@drawable/wind"
                             android:layout_marginEnd="6dp"
-                             />
+
+                            />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -313,7 +351,12 @@
                             android:text="Wind"
                             android:textColor="@android:color/white"
                             android:textSize="14sp"
-                            android:fontFamily="sans-serif-medium" />
+                            android:fontFamily="sans-serif-medium"
+                            android:shadowColor="#80000000"
+                            android:shadowDx="1"
+                            android:shadowDy="1"
+                            android:shadowRadius="2"
+                            />
                     </LinearLayout>
 
                     <TextView
@@ -324,15 +367,13 @@
                         android:textSize="32sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/white"
-                        android:layout_marginTop="8dp" />
+                        android:layout_marginTop="8dp"
+                        android:shadowColor="#80000000"
+                        android:shadowDx="1"
+                        android:shadowDy="1"
+                        android:shadowRadius="2"
+                        />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wind speed"
-                        android:textColor="@android:color/white"
-                        android:textSize="14sp"
-                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
             </GridLayout>

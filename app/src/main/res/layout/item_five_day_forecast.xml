@@ -1,0 +1,39 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="6dp"
+    android:paddingHorizontal="8dp"
+    android:shadowColor="#AA000000"
+    android:shadowDx="1"
+    android:shadowDy="1"
+    android:shadowRadius="3">
+
+    <TextView
+        android:id="@+id/tvDayName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Mon"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif-medium" />
+
+    <ImageView
+        android:id="@+id/ivDayIcon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="12dp"
+        android:src="@drawable/ic_sunny" />
+
+    <TextView
+        android:id="@+id/tvTempRange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="30° / 25°"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:fontFamily="sans-serif" />
+
+</LinearLayout>
