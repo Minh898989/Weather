@@ -1,5 +1,6 @@
 package com.example.appweather.api;
 
+
 import com.example.appweather.model.WeatherResponse;
 
 import retrofit2.Call;
