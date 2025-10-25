@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "com.example.appweather"
-    compileSdk = 34 // <-- SỬA Ở ĐÂY: từ 36 xuống 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.appweather"
         minSdk = 27
-        targetSdk = 34 // <-- SỬA Ở ĐÂY: từ 36 xuống 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 

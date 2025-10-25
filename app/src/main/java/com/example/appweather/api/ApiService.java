@@ -1,23 +1,45 @@
 package com.example.appweather.api;
 
+<<<<<<< HEAD
 
+=======
+import com.example.appweather.model.RealtimeResponse;
+import com.example.appweather.model.TimeLineResponse;
+import com.example.appweather.model.TimelineRequest;
+>>>>>>> f1812bb87030bd5b9f21181aa4122b84fd505f23
 import com.example.appweather.model.WeatherResponse;
-
 import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
+import retrofit2.http.*;
 
 public interface ApiService {
 
-    @GET("v4/weather/forecast")
-    Call<WeatherResponse> getWeatherByLocation(
-            @Query("location") String location,
-            @Query("apikey") String apiKey
-    );
-    @GET("v4/weather/realtime")
-    Call<WeatherResponse> getRealtimeWeather(
-            @Query("location") String location,
-            @Query("apikey") String apiKey,
-            @Query("units") String unit
-    );
+        @Headers({
+                        "accept: application/json",
+                        "content-type: application/json"
+        })
+        @GET("v4/weather/forecast")
+        Call<WeatherResponse> getForecast(
+                        @Query("location") String location,
+                        @Query("apikey") String apiKey,
+                        @Query("units") String units,
+                        @Query("timesteps") String timesteps);
+
+        @Headers({
+                        "accept: application/json",
+                        "content-type: application/json"
+        })
+        @GET("v4/weather/realtime")
+        Call<RealtimeResponse> getRealtimeWeather(
+                        @Query("location") String location,
+                        @Query("apikey") String apiKey,
+                        @Query("units") String units);
+
+        @Headers({
+                        "accept: application/json",
+                        "content-type: application/json"
+        })
+        @POST("v4/timelines")
+        Call<TimeLineResponse> getTimelines(
+                        @Query("apikey") String apiKey,
+                        @Body TimelineRequest body);
 }
