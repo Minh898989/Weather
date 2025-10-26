@@ -1,12 +1,10 @@
 package com.example.appweather.api;
 
-<<<<<<< HEAD
 
-=======
 import com.example.appweather.model.RealtimeResponse;
 import com.example.appweather.model.TimeLineResponse;
 import com.example.appweather.model.TimelineRequest;
->>>>>>> f1812bb87030bd5b9f21181aa4122b84fd505f23
+
 import com.example.appweather.model.WeatherResponse;
 import retrofit2.Call;
 import retrofit2.http.*;
