@@ -41,13 +41,18 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    private static final String API_KEY = "kptvVA729aQGrF6xIic4QjCMu9P2idbh";
+    private long lastRequestTimestamp;
+    private static final String API_KEY = "YuhoFpmyMJF1v1e5jxRpQVibP7o67Rql";
 
     LinearLayout hourlyContainer, cityBar;
     TextView tvCity;
     TextView tvTemperature;
     ImageView iconSettings;
     RelativeLayout rootLayout;
+    private TextView tvPrecipitationValue;
+    private TextView tvHumidityValue;
+    private TextView tvWindValue;
+    private TextView tvAQIValue;
 
     private ApiService apiService;
     private String currentLocation = "Hà nội";
@@ -64,6 +69,10 @@ public class MainActivity extends AppCompatActivity {
         iconSettings = findViewById(R.id.iconSettings);
         hourlyContainer = findViewById(R.id.hourlyContainer);
         rootLayout = findViewById(R.id.rootLayout);
+        tvPrecipitationValue = findViewById(R.id.tvPrecipitationValue);
+        tvHumidityValue = findViewById(R.id.tvHumidityValue);
+        tvWindValue = findViewById(R.id.tvWindValue);
+        tvAQIValue = findViewById(R.id.tvAQIValue);
         // Gọi API để lấy dữ liệu thời tiết thật
         layDuLieuThoiTiet(currentLocation);
         layDuLieuThoiTiet5Ngay(currentLocation);
@@ -76,6 +85,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void layDuLieuThoiTiet(String location) {
         Log.d(TAG, "Đang lấy dữ liệu thời tiết cho: " + location);
+        final long requestTime = System.currentTimeMillis();
+        if (location.equals(currentLocation)) {
+            lastRequestTimestamp = requestTime;
+        }
 
         Call<WeatherResponse> call = apiService.getForecast(
                 location,
@@ -87,6 +100,10 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<WeatherResponse>() {
             @Override
             public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
+                if (requestTime < lastRequestTimestamp) {
+                    Log.d(TAG, "Bỏ qua kết quả cũ từ layDuLieuThoiTiet.");
+                    return;
+                }
                 try {
                     Log.d(TAG, "Mã phản hồi: " + response.code());
                     if (!response.isSuccessful()) {
@@ -127,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void layDuLieuThoiTiet5Ngay(String location) {
         Log.d(TAG, "Lấy dữ liệu dự báo 5 ngày cho: " + location);
+        final long requestTime = System.currentTimeMillis();
 
         List<String> cacTruong = Arrays.asList(
                 "temperature",
@@ -159,6 +177,10 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<TimeLineResponse>() {
             @Override
             public void onResponse(Call<TimeLineResponse> call, Response<TimeLineResponse> response) {
+                if (requestTime < lastRequestTimestamp) {
+                    Log.d(TAG, "Bỏ qua kết quả cũ từ layDuLieuThoiTiet5Ngay.");
+                    return;
+                }
                 if (!response.isSuccessful()) {
                     Log.e(TAG, "Lỗi API: " + response.code());
                     return;
@@ -288,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void layVaCapNhatCards(String location) {
         Log.d(TAG, "Đang lấy dữ liệu realtime cho cards: " + location);
+        final long requestTime = System.currentTimeMillis();
 
         Call<RealtimeResponse> call = apiService.getRealtimeWeather(
                 location,
@@ -298,6 +321,10 @@ public class MainActivity extends AppCompatActivity {
         call.enqueue(new Callback<RealtimeResponse>() {
             @Override
             public void onResponse(Call<RealtimeResponse> call, Response<RealtimeResponse> response) {
+                if (requestTime < lastRequestTimestamp) {
+                    Log.d(TAG, "Bỏ qua kết quả cũ từ layVaCapNhatCards.");
+                    return;
+                }
                 try {
                     if (!response.isSuccessful()) {
                         String errorBody = response.errorBody() != null
@@ -368,6 +395,7 @@ public class MainActivity extends AppCompatActivity {
         String precipDesc = getPrecipitationDescription(
                 values.getPrecipitationProbability() != null ? values.getPrecipitationProbability() : 0.0);
 
+        if(tvPrecipitationValue != null) tvPrecipitationValue.setText(precipValue);
         LinearLayout cardPrecipitation = findViewById(R.id.cardPrecipitation);
         if (cardPrecipitation != null) {
             cardPrecipitation.setOnClickListener(
@@ -379,6 +407,7 @@ public class MainActivity extends AppCompatActivity {
         String humidityValue = humidity != null ? Math.round(humidity) + "%" : "N/A";
         String humidityDesc = getHumidityDescription(humidity);
 
+        if(tvHumidityValue != null) tvHumidityValue.setText(humidityValue);
         LinearLayout cardHumidity = findViewById(R.id.cardHumidity);
         if (cardHumidity != null) {
             cardHumidity.setOnClickListener(
@@ -390,6 +419,7 @@ public class MainActivity extends AppCompatActivity {
         String windValue = windSpeed != null ? String.format("%.1f km/h", windSpeed) : "N/A";
         String windDesc = getWindDescription(windSpeed);
 
+        if(tvWindValue != null) tvWindValue.setText(windValue);
         LinearLayout cardWind = findViewById(R.id.cardWind);
         if (cardWind != null) {
             cardWind.setOnClickListener(
@@ -400,6 +430,8 @@ public class MainActivity extends AppCompatActivity {
         int estimatedAQI = uocLuongAQI(values);
         String aqiValue = String.valueOf(estimatedAQI);
         String aqiDesc = getAQIDescription(estimatedAQI);
+
+        if(tvAQIValue != null) tvAQIValue.setText(aqiValue);
 
         LinearLayout cardAQI = findViewById(R.id.cardAQI);
         if (cardAQI != null) {
@@ -648,12 +680,12 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener((parent, view, position, id) -> {
             String selectedProvince = adapter.getItem(position);
             tvCity.setText(selectedProvince + ", Việt Nam");
-
+            lastRequestTimestamp = System.currentTimeMillis();
             // Cập nhật location và gọi API lại
             currentLocation = selectedProvince;
             layDuLieuThoiTiet(currentLocation);
             layDuLieuThoiTiet5Ngay(currentLocation);
-
+            layVaCapNhatCards(currentLocation);
             Toast.makeText(this, "Đang tải thời tiết " + selectedProvince + "...", Toast.LENGTH_SHORT).show();
             dialog.dismiss();
         });
