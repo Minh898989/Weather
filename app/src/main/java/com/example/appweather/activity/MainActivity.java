@@ -41,12 +41,8 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-
-    private static final String API_KEY = "YPjYqtiDn3f6DHPFl9MEwfw9oorn4D9q";
-
     private long lastRequestTimestamp;
-
-
+    private static final String API_KEY = "YuhoFpmyMJF1v1e5jxRpQVibP7o67Rql";
 
     LinearLayout hourlyContainer, cityBar;
     TextView tvCity;
@@ -73,15 +69,11 @@ public class MainActivity extends AppCompatActivity {
         iconSettings = findViewById(R.id.iconSettings);
         hourlyContainer = findViewById(R.id.hourlyContainer);
         rootLayout = findViewById(R.id.rootLayout);
-
-
-
         tvPrecipitationValue = findViewById(R.id.tvPrecipitationValue);
         tvHumidityValue = findViewById(R.id.tvHumidityValue);
         tvWindValue = findViewById(R.id.tvWindValue);
         tvAQIValue = findViewById(R.id.tvAQIValue);
         // Gọi API để lấy dữ liệu thời tiết thật
-
         layDuLieuThoiTiet(currentLocation);
         layDuLieuThoiTiet5Ngay(currentLocation);
         layVaCapNhatCards(currentLocation);
@@ -226,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void capNhatUIVoiDuLieuThoiTiet(WeatherResponse weatherData) {
-
+        // Cập nhật tên thành phố có fallback
         String cityName = (weatherData.getLocation() != null && weatherData.getLocation().getName() != null)
                 ? weatherData.getLocation().getName()
                 : currentLocation;
