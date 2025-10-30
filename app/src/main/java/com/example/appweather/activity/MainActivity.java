@@ -28,7 +28,6 @@ import android.widget.Toast;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -363,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
                         tvTemperature.setText(Math.round(values.getTemperature()) + "°");
                     }
 
-                    capNhatCards(values);
+                    capNhatCards(location, values);
 
                 } catch (Exception e) {
                     Log.e(TAG, "Lỗi xử lý realtime data: " + e.getMessage(), e);
@@ -389,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void capNhatCards(RealtimeResponse.Values currentValues) {
+    private void capNhatCards(String location, RealtimeResponse.Values currentValues) {
         if (currentValues == null) {
             Log.w(TAG, "❌ Values null trong capNhatCards, bỏ qua.");
             return;
@@ -397,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
 
         updateCardDisplayValues(currentValues);
 
-        layDuLieuLichSu(currentLocation, new HistoryCallback() {
+        layDuLieuLichSu(location, new HistoryCallback() {
             @Override
             public void onSuccess(WeatherResponse.Values yesterdayValues) {
                 Log.d(TAG, "Cài đặt OnClick với dữ liệu lịch sử thật.");
@@ -493,43 +492,67 @@ public class MainActivity extends AppCompatActivity {
                 ? Math.round(yesterdayValues.getPrecipitationProbability()) + "%" : "N/A";
         LinearLayout cardPrecipitation = findViewById(R.id.cardPrecipitation);
         if (cardPrecipitation != null) {
-            cardPrecipitation.setOnClickListener(v -> new InfoDetailDialog(this).show(
-                    R.drawable.rainn, "Khả năng có mưa", precipValueToday,
-                    getPrecipitationDescription(currentValues.getPrecipitationProbability() != null ? currentValues.getPrecipitationProbability() : 0.0),
-                    precipValueToday, "Hôm nay", yesterdayPrecipValue, "Hôm qua"));
-        }
+            cardPrecipitation.setOnClickListener(v -> {
+                String descToday = getPrecipitationDescription(currentValues.getPrecipitationProbability() != null ? currentValues.getPrecipitationProbability() : 0.0);
+                String descYesterday = (yesterdayValues != null && yesterdayValues.getPrecipitationProbability() != null)
+                        ? getPrecipitationDescription(yesterdayValues.getPrecipitationProbability()) : "Hôm qua";
 
+                new InfoDetailDialog(this).show(
+                        R.drawable.rainn, "Khả năng có mưa", precipValueToday,
+                        descToday,
+                        precipValueToday, descToday,
+                        yesterdayPrecipValue, descYesterday);
+            });
+        }
         float currentHumidity = (currentValues.getHumidity() != null) ? currentValues.getHumidity().floatValue() : 0.0f;
         String humidityValueToday = Math.round(currentHumidity) + "%";
         String yesterdayHumidityValue = (yesterdayValues != null && yesterdayValues.getHumidity() != null)
                 ? Math.round(yesterdayValues.getHumidity()) + "%" : "N/A";
+
         LinearLayout cardHumidity = findViewById(R.id.cardHumidity);
         if (cardHumidity != null) {
-            cardHumidity.setOnClickListener(v -> new InfoDetailDialog(this).show(
-                    R.drawable.humidity, "Độ ẩm", humidityValueToday, getHumidityDescription(currentHumidity),
-                    humidityValueToday, "Hôm nay", yesterdayHumidityValue, "Hôm qua"));
-        }
+            cardHumidity.setOnClickListener(v -> {
+                String descToday = getHumidityDescription(currentHumidity);
+                String descYesterday = (yesterdayValues != null && yesterdayValues.getHumidity() != null)
+                        ? getHumidityDescription(yesterdayValues.getHumidity().floatValue()) : "Hôm qua";
 
+                new InfoDetailDialog(this).show(
+                        R.drawable.humidity, "Độ ẩm", humidityValueToday,
+                        descToday,
+                        humidityValueToday, descToday,
+                        yesterdayHumidityValue, descYesterday);
+            });
+        }
         float currentWindSpeed = (currentValues.getWindSpeed() != null) ? currentValues.getWindSpeed().floatValue() : 0.0f;
         String windValueToday = String.format(Locale.getDefault(), "%.1f km/h", currentWindSpeed);
         String yesterdayWindValue = (yesterdayValues != null && yesterdayValues.getWindSpeed() != null)
                 ? String.format(Locale.getDefault(), "%.1f km/h", yesterdayValues.getWindSpeed()) : "N/A";
         LinearLayout cardWind = findViewById(R.id.cardWind);
         if (cardWind != null) {
-            cardWind.setOnClickListener(v -> new InfoDetailDialog(this).show(
-                    R.drawable.wind, "Gió", windValueToday, getWindDescription(currentWindSpeed),
-                    windValueToday, "Hôm nay", yesterdayWindValue, "Hôm qua"));
-        }
+            cardWind.setOnClickListener(v -> {
+                String descToday = getWindDescription(currentWindSpeed);
+                String descYesterday = (yesterdayValues != null && yesterdayValues.getWindSpeed() != null)
+                        ? getWindDescription(yesterdayValues.getWindSpeed().floatValue()) : "Hôm qua";
 
+                new InfoDetailDialog(this).show(
+                        R.drawable.wind, "Gió", windValueToday,
+                        descToday,
+                        windValueToday, descToday,
+                        yesterdayWindValue, descYesterday);
+            });
+        }
         int aqiToday = uocLuongAQI(currentValues);
         int yesterdayAQIInt = (yesterdayValues != null) ? uocLuongAQI(yesterdayValues) : -1;
         String yesterdayAQIValue = (yesterdayAQIInt != -1) ? String.valueOf(yesterdayAQIInt) : "N/A";
         String yesterdayAQIDesc = (yesterdayAQIInt != -1) ? getAQIShortDescription(yesterdayAQIInt) : "Hôm qua";
+
         LinearLayout cardAQI = findViewById(R.id.cardAQI);
         if (cardAQI != null) {
             cardAQI.setOnClickListener(v -> new InfoDetailDialog(this).show(
-                    R.drawable.ic_aqi, "Chỉ số AQI", String.valueOf(aqiToday), getAQIDescription(aqiToday),
-                    String.valueOf(aqiToday), getAQIShortDescription(aqiToday), yesterdayAQIValue, yesterdayAQIDesc));
+                    R.drawable.ic_aqi, "Chỉ số AQI", String.valueOf(aqiToday),
+                    getAQIDescription(aqiToday),
+                    String.valueOf(aqiToday), getAQIShortDescription(aqiToday),
+                    yesterdayAQIValue, yesterdayAQIDesc));
         }
     }
     private int uocLuongAQI(WeatherResponse.Values values) {
