@@ -1,5 +1,6 @@
 package com.example.appweather.model;
 
+import com.example.appweather.activity.MainActivity;
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
@@ -36,7 +37,6 @@ public class WeatherResponse {
 
         @SerializedName("daily")
         private List<TimelineData> daily;
-
         public List<TimelineData> getMinutely() {
             return minutely;
         }
@@ -47,6 +47,27 @@ public class WeatherResponse {
 
         public List<TimelineData> getDaily() {
             return daily;
+        }
+
+        public List<TimelineData> getIntervals() {
+            if (hourly != null && !hourly.isEmpty()) {
+                return hourly;
+            }
+            if (daily != null && !daily.isEmpty()) {
+                return daily;
+            }
+            return minutely;
+        }
+        public boolean isEmpty() {
+            List<TimelineData> intervals = getIntervals();
+            return intervals == null || intervals.isEmpty();
+        }
+        public TimelineData get(int index) {
+            List<TimelineData> intervals = getIntervals();
+            if (intervals != null && index >= 0 && index < intervals.size()) {
+                return intervals.get(index);
+            }
+            return null;
         }
     }
 
@@ -66,7 +87,7 @@ public class WeatherResponse {
         }
     }
 
-    public static class Values {
+    public static class Values implements MainActivity.WeatherValues {
         @SerializedName("temperature")
         private Double temperature;
         @SerializedName("temperatureApparent")

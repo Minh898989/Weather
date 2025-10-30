@@ -19,7 +19,18 @@ public interface ApiService {
                         @Query("apikey") String apiKey,
                         @Query("units") String units,
                         @Query("timesteps") String timesteps);
-
+        @Headers({
+                "accept: application/json",
+                "content-type: application/json"
+        })
+        @GET("v4/weather/history/recent")
+        Call<WeatherResponse> getForecastHistory(
+                @Query("location") String location,
+                @Query("apikey") String apiKey,
+                @Query("units") String units,
+                @Query("timesteps") String timesteps,
+                @Query("startTime") String startTime,
+                @Query("endTime") String endTime);
         @Headers({
                         "accept: application/json",
                         "content-type: application/json"

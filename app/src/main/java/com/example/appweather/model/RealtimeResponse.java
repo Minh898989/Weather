@@ -1,5 +1,6 @@
 package com.example.appweather.model;
 
+import com.example.appweather.activity.MainActivity;
 import com.google.gson.annotations.SerializedName;
 
 public class RealtimeResponse {
@@ -33,9 +34,7 @@ public class RealtimeResponse {
             return values;
         }
     }
-
-    // --- Nested class Values (trước đây là RealtimeValues) ---
-    public static class Values {
+    public static class Values implements MainActivity.WeatherValues {
         @SerializedName("temperature")
         private Double temperature;
 
