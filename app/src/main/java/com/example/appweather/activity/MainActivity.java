@@ -49,7 +49,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private long lastRequestTimestamp;
-    private static final String API_KEY = "YuhoFpmyMJF1v1e5jxRpQVibP7o67Rql";
+    private static final String API_KEY = "lmyTvA6zxjtNm0ZdzaiKwpZrFFt3X4eV";
 
     LinearLayout hourlyContainer, cityBar;
     TextView tvCity;
@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvHumidityValue;
     private TextView tvWindValue;
     private TextView tvAQIValue;
-
+    private TextView tvAQIStatus;
     private ApiService apiService;
     private String currentLocation = "Hà nội";
     public interface HistoryCallback {
@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
         tvHumidityValue = findViewById(R.id.tvHumidityValue);
         tvWindValue = findViewById(R.id.tvWindValue);
         tvAQIValue = findViewById(R.id.tvAQIValue);
+        tvAQIStatus = findViewById(R.id.tvAQIStatus);
         // Gọi API để lấy dữ liệu thời tiết thật
         layDuLieuThoiTiet(currentLocation);
         layDuLieuThoiTiet5Ngay(currentLocation);
@@ -496,6 +497,7 @@ public class MainActivity extends AppCompatActivity {
 
         int aqiToday = uocLuongAQI(currentValues);
         if (tvAQIValue != null) tvAQIValue.setText(String.valueOf(aqiToday));
+        if (tvAQIStatus != null) tvAQIStatus.setText(getAQIShortDescription(aqiToday));
     }
 
     private void setupCardClickListeners(RealtimeResponse.Values currentValues, @Nullable WeatherResponse.Values yesterdayValues) {
