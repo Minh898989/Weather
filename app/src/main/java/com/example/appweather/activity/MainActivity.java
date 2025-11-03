@@ -881,8 +881,8 @@ public class MainActivity extends AppCompatActivity {
         );
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 13);
-        calendar.set(Calendar.MINUTE, 49);
+        calendar.set(Calendar.HOUR_OF_DAY, 14);
+        calendar.set(Calendar.MINUTE, 7);
         calendar.set(Calendar.SECOND, 0);
 
 

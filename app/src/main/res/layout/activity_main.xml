@@ -56,7 +56,8 @@
         android:layout_height="match_parent"
         android:layout_below="@id/cityBar"
         android:padding="24dp"
-        android:clipToPadding="false">
+        android:clipToPadding="false"
+        android:scrollbars="none">
 
         <LinearLayout
             android:orientation="vertical"
@@ -66,7 +67,7 @@
 
             <TextView
                 android:id="@+id/tvCondition"
-                android:text="Bây giờ"
+                android:text="Nhiệt độ"
                 android:textColor="@android:color/white"
                 android:textSize="20sp"
                 android:layout_marginBottom="4dp"
@@ -75,7 +76,7 @@
 
             <TextView
                 android:id="@+id/tvTemperature"
-                android:text=""
+                android:text="27°"
                 android:textSize="96sp"
                 android:textColor="@android:color/white"
                 android:fontFamily="sans-serif-medium"
@@ -86,7 +87,7 @@
 
 
             <TextView
-                android:text="Hourly forecast"
+                android:text="Dự báo hàng giờ"
                 android:textColor="@android:color/white"
                 android:textSize="16sp"
                 android:layout_marginBottom="8dp"
@@ -119,7 +120,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="5-Day Forecast"
+                    android:text="Dự báo 5 ngày sau"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
                     android:fontFamily="sans-serif-medium"
@@ -138,7 +139,7 @@
 
 
             <TextView
-                android:text="Today's details"
+                android:text="Chi tiết hôm nay"
                 android:textColor="@android:color/white"
                 android:textSize="18sp"
                 android:layout_marginTop="20dp"
@@ -156,7 +157,6 @@
                 android:useDefaultMargins="true"
                 android:alignmentMode="alignMargins"
                 android:columnOrderPreserved="false"
-                android:layout_marginHorizontal="8dp"
                 android:layout_marginBottom="24dp">
 
 
@@ -182,7 +182,7 @@
                             android:layout_height="16dp"
                             android:src="@drawable/ic_aqi"
                             android:layout_marginEnd="6dp"
-                             />
+                            />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -207,7 +207,7 @@
                         android:id="@+id/tvAQIStatus"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Good"
+                        android:text="Tốt"
                         android:textColor="@android:color/white"
                         android:textSize="14sp"
                         android:layout_marginTop="2dp" />
@@ -241,7 +241,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Precipitation"
+                            android:text="Lượng mưa"
                             android:textColor="@android:color/white"
                             android:textSize="14sp"
                             android:fontFamily="sans-serif-medium" />
@@ -258,12 +258,13 @@
                         android:layout_marginTop="8dp" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Total rain for the day"
+                        android:text="Tổng lượng mưa trong ngày"
                         android:textColor="@android:color/white"
                         android:textSize="14sp"
-                        android:layout_marginTop="2dp" />
+                        android:layout_marginTop="2dp"
+                        android:gravity="center_horizontal" />
                 </LinearLayout>
 
 
@@ -289,12 +290,12 @@
                             android:layout_height="16dp"
                             android:src="@drawable/humidity"
                             android:layout_marginEnd="6dp"
-                             />
+                            />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Humidity"
+                            android:text="Độ ẩm"
                             android:textColor="@android:color/white"
                             android:textSize="14sp"
                             android:fontFamily="sans-serif-medium" />
@@ -313,7 +314,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Relative humidity"
+                        android:text="Độ ẩm tương đối"
                         android:textColor="@android:color/white"
                         android:textSize="14sp"
                         android:layout_marginTop="2dp" />
@@ -348,7 +349,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Wind"
+                            android:text="Gió"
                             android:textColor="@android:color/white"
                             android:textSize="14sp"
                             android:fontFamily="sans-serif-medium"
