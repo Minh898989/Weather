@@ -38,7 +38,7 @@ public class WeatherNotificationReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d("WeatherReceiver", "✅ onReceive được gọi!");
+        Log.d("WeatherReceiver", "onReceive được gọi!");
 
         PendingResult pendingResult = goAsync();
         String apiKey = intent.getStringExtra("api_key");

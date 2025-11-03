@@ -54,7 +54,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private long lastRequestTimestamp;
-    private static final String API_KEY = "YPjYqtiDn3f6DHPFl9MEwfw9oorn4D9q";
+    private static final String API_KEY = "JrmPSYi07VnKyML8ITUySg4oPQTlBdsQ";
     private static final int REQUEST_CODE_CITY_LIST = 1001;
 
     LinearLayout hourlyContainer, cityBar;
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // Khởi tạo API Service
+
         apiService = ApiClient.getClient().create(ApiService.class);
         cityBar = findViewById(R.id.cityBar);
         tvCity = findViewById(R.id.tvCity);
@@ -441,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
                         String errorBody = response.errorBody() != null
                                 ? response.errorBody().string()
                                 : "Lỗi không xác định";
-                        Log.e(TAG, "❌ Lỗi realtime API: " + response.code() + " - " + errorBody);
+                        Log.e(TAG, "Lỗi realtime API: " + response.code() + " - " + errorBody);
                         Toast.makeText(MainActivity.this, "Lỗi API: " + response.code(), Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -490,7 +490,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void capNhatCards(String location, RealtimeResponse.Values currentValues) {
         if (currentValues == null) {
-            Log.w(TAG, "❌ Values null trong capNhatCards, bỏ qua.");
+            Log.w(TAG, "Values null trong capNhatCards, bỏ qua.");
             return;
         }
 
@@ -543,7 +543,7 @@ public class MainActivity extends AppCompatActivity {
                             var interval = timeline.get(0);
 
                             if (interval != null) {
-                                Log.d(TAG, "✅ Lấy dữ liệu lịch sử thành công.");
+                                Log.d(TAG, "Lấy dữ liệu lịch sử thành công.");
                                 callback.onSuccess(interval.getValues());
                             } else {
                                 callback.onFailure(new Exception("Dữ liệu lịch sử (interval) trả về null."));
@@ -976,8 +976,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         long triggerTime = calendar.getTimeInMillis();
-
-        // ⏰ Lặp lại mỗi 24 giờ (mỗi ngày)
         long interval = AlarmManager.INTERVAL_DAY;
 
         alarmManager.setRepeating(

@@ -40,7 +40,7 @@ import retrofit2.Response;
 
 public class CityListActivity extends AppCompatActivity {
     private static final String TAG = "CityListActivity";
-    private static final String API_KEY = "jXhYuL7ly6EhTAvp62HiQoQEIsgvWI8l";
+    private static final String API_KEY = "JrmPSYi07VnKyML8ITUySg4oPQTlBdsQ";
 
     private ListView listViewCities;
     private EditText searchBox;
