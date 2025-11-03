@@ -99,6 +99,8 @@ public class TimeLineResponse {
         @SerializedName("temperatureApparent")
         private Double temperatureApparent;
 
+        private Double RainIntensity;
+
         public Double getTemperature() {
             return temperature;
         }
@@ -133,6 +135,10 @@ public class TimeLineResponse {
 
         public Double getTemperatureApparent() {
             return temperatureApparent;
+        }
+
+        public Double getRainIntensity() {
+            return RainIntensity;
         }
     }
 
