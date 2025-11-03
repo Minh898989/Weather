@@ -64,7 +64,7 @@ public class DuBao5NgayHelper {
     }
 
     public static void thietLapDuBao5NgayThuc(Context context, LinearLayout layout,
-            TimeLineResponse timelineResponse) {
+                                              TimeLineResponse timelineResponse) {
         if (layout == null || timelineResponse == null || timelineResponse.getData() == null) {
             Log.e(TAG, "Không thể thiết lập dự báo: layout hoặc dữ liệu null");
             thietLapDuBao5NgayFake(context, layout);
@@ -138,7 +138,7 @@ public class DuBao5NgayHelper {
     }
 
     private static String layTenNgay(String isoTime, int indexNgay, SimpleDateFormat dayFormat,
-            SimpleDateFormat isoFormat) {
+                                     SimpleDateFormat isoFormat) {
         if (indexNgay == 0) {
             return "Hôm nay";
         }

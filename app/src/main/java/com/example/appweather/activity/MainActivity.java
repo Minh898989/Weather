@@ -1,5 +1,6 @@
 package com.example.appweather.activity;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -11,7 +12,14 @@ import com.example.appweather.model.TimeLineResponse;
 import com.example.appweather.model.TimelineRequest;
 import com.example.appweather.model.WeatherResponse;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -42,7 +50,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private long lastRequestTimestamp;
-    private static final String API_KEY = "YuhoFpmyMJF1v1e5jxRpQVibP7o67Rql";
+    private static final String API_KEY = "YPjYqtiDn3f6DHPFl9MEwfw9oorn4D9q";
 
     LinearLayout hourlyContainer, cityBar;
     TextView tvCity;
@@ -53,9 +61,19 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvHumidityValue;
     private TextView tvWindValue;
     private TextView tvAQIValue;
-
+    private TextView tvAQIStatus;
     private ApiService apiService;
     private String currentLocation = "Hà nội";
+    public interface HistoryCallback {
+        void onSuccess(WeatherResponse.Values yesterdayValues);
+        void onFailure(Throwable t);
+    }
+    public interface WeatherValues {
+        Double getVisibility();
+        Double getHumidity();
+        Integer getWeatherCode();
+        Double getWindSpeed();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,12 +91,20 @@ public class MainActivity extends AppCompatActivity {
         tvHumidityValue = findViewById(R.id.tvHumidityValue);
         tvWindValue = findViewById(R.id.tvWindValue);
         tvAQIValue = findViewById(R.id.tvAQIValue);
+        tvAQIStatus = findViewById(R.id.tvAQIStatus);
         // Gọi API để lấy dữ liệu thời tiết thật
         layDuLieuThoiTiet(currentLocation);
         layDuLieuThoiTiet5Ngay(currentLocation);
         layVaCapNhatCards(currentLocation);
+        scheduleDailyWeatherNotification();
         LinearLayout layoutFiveDay = findViewById(R.id.layoutFiveDay);
         cityBar.setOnClickListener(v -> showProvinceDialog());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1);
+            }
+        }
 
         iconSettings.setOnClickListener(v -> Toast.makeText(this, "Mở cài đặt thời tiết", Toast.LENGTH_SHORT).show());
     }
@@ -160,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         String ngayHienTai = dinhDangISO.format(new Date());
 
         Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_MONTH, 5);
+        cal.add(Calendar.DAY_OF_MONTH, 4);
         String ngayHienTaiCong5Ngay = dinhDangISO.format(cal.getTime());
 
         TimelineRequest requestBody = new TimelineRequest(
@@ -351,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
                         tvTemperature.setText(Math.round(values.getTemperature()) + "°");
                     }
 
-                    capNhatCards(values);
+                    capNhatCards(location, values);
 
                 } catch (Exception e) {
                     Log.e(TAG, "Lỗi xử lý realtime data: " + e.getMessage(), e);
@@ -377,74 +403,175 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void capNhatCards(RealtimeResponse.Values values) {
-        if (values == null) {
-            Log.w(TAG, "❌ Values null, không thể cập nhật cards");
+    private void capNhatCards(String location, RealtimeResponse.Values currentValues) {
+        if (currentValues == null) {
+            Log.w(TAG, "❌ Values null trong capNhatCards, bỏ qua.");
             return;
         }
 
-        // ===== PRECIPITATION (Khả năng mưa) =====
-        String precipValue;
-        if (values.getPrecipitationProbability() != null) {
-            precipValue = Math.round(values.getPrecipitationProbability()) + "%";
-        } else if (values.getRainIntensity() != null) {
-            precipValue = String.format(Locale.getDefault(), "%.1f mm", values.getRainIntensity());
-        } else {
-            precipValue = "N/A";
-        }
-        String precipDesc = getPrecipitationDescription(
-                values.getPrecipitationProbability() != null ? values.getPrecipitationProbability() : 0.0);
+        updateCardDisplayValues(currentValues);
 
-        if(tvPrecipitationValue != null) tvPrecipitationValue.setText(precipValue);
+        layDuLieuLichSu(location, new HistoryCallback() {
+            @Override
+            public void onSuccess(WeatherResponse.Values yesterdayValues) {
+                Log.d(TAG, "Cài đặt OnClick với dữ liệu lịch sử thật.");
+                setupCardClickListeners(currentValues, yesterdayValues);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                Log.e(TAG, "Lỗi lấy lịch sử. Cài đặt OnClick với dữ liệu hôm qua là N/A.", t);
+                setupCardClickListeners(currentValues, null);
+            }
+        });
+    }
+
+    private String getAQIShortDescription(int aqi) {
+        if (aqi <= 50) return "Tốt";
+        if (aqi <= 100) return "Trung bình";
+        if (aqi <= 150) return "Không lành mạnh";
+        if (aqi <= 200) return "Rất không lành mạnh";
+        if (aqi <= 300) return "Nguy hại";
+        return "Rất nguy hại";
+    }
+
+    private void layDuLieuLichSu(String location, HistoryCallback callback) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+
+        calendar.add(Calendar.HOUR, -24);
+        String endTime = sdf.format(calendar.getTime());
+
+        calendar.add(Calendar.HOUR, -1);
+        String startTime = sdf.format(calendar.getTime());
+
+        Log.d(TAG, "Đang lấy dữ liệu lịch sử từ " + startTime + " đến " + endTime);
+
+        apiService.getForecastHistory(location, API_KEY, "metric", "1h", startTime, endTime)
+                .enqueue(new Callback<WeatherResponse>() {
+                    @Override
+                    public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
+                        if (response.isSuccessful() && response.body() != null && response.body().getTimelines() != null && !response.body().getTimelines().isEmpty()) {
+                            var timeline = response.body().getTimelines();
+                            var interval = timeline.get(0);
+
+                            if (interval != null) {
+                                Log.d(TAG, "✅ Lấy dữ liệu lịch sử thành công.");
+                                callback.onSuccess(interval.getValues());
+                            } else {
+                                callback.onFailure(new Exception("Dữ liệu lịch sử (interval) trả về null."));
+                            }
+                        } else {
+                            try {
+                                String errorMsg = "Lỗi khi lấy dữ liệu lịch sử: " + response.code();
+                                if (response.errorBody() != null) errorMsg += " - " + response.errorBody().string();
+                                Log.e(TAG, errorMsg);
+                                callback.onFailure(new Exception(errorMsg));
+                            } catch (Exception e) {
+                                callback.onFailure(e);
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<WeatherResponse> call, Throwable t) {
+                        Log.e(TAG, "API lịch sử thất bại", t);
+                        callback.onFailure(t);
+                    }
+                });
+    }
+
+    private void updateCardDisplayValues(RealtimeResponse.Values currentValues) {
+        String precipValueToday = (currentValues.getPrecipitationProbability() != null)
+                ? Math.round(currentValues.getPrecipitationProbability()) + "%" : "0%";
+        if (tvPrecipitationValue != null) tvPrecipitationValue.setText(precipValueToday);
+
+        float currentHumidity = (currentValues.getHumidity() != null) ? currentValues.getHumidity().floatValue() : 0.0f;
+        String humidityValueToday = Math.round(currentHumidity) + "%";
+        if (tvHumidityValue != null) tvHumidityValue.setText(humidityValueToday);
+
+        float currentWindSpeed = (currentValues.getWindSpeed() != null) ? currentValues.getWindSpeed().floatValue() : 0.0f;
+        String windValueToday = String.format(Locale.getDefault(), "%.1f km/h", currentWindSpeed);
+        if (tvWindValue != null) tvWindValue.setText(windValueToday);
+
+        int aqiToday = uocLuongAQI(currentValues);
+        if (tvAQIValue != null) tvAQIValue.setText(String.valueOf(aqiToday));
+        if (tvAQIStatus != null) tvAQIStatus.setText(getAQIShortDescription(aqiToday));
+    }
+
+    private void setupCardClickListeners(RealtimeResponse.Values currentValues, @Nullable WeatherResponse.Values yesterdayValues) {
+        String precipValueToday = (currentValues.getPrecipitationProbability() != null)
+                ? Math.round(currentValues.getPrecipitationProbability()) + "%" : "0%";
+        String yesterdayPrecipValue = (yesterdayValues != null && yesterdayValues.getPrecipitationProbability() != null)
+                ? Math.round(yesterdayValues.getPrecipitationProbability()) + "%" : "N/A";
         LinearLayout cardPrecipitation = findViewById(R.id.cardPrecipitation);
         if (cardPrecipitation != null) {
-            cardPrecipitation.setOnClickListener(
-                    v -> new InfoDetailDialog(this).show("Precipitation", precipValue, precipDesc, R.drawable.rainn));
+            cardPrecipitation.setOnClickListener(v -> {
+                String descToday = getPrecipitationDescription(currentValues.getPrecipitationProbability() != null ? currentValues.getPrecipitationProbability() : 0.0);
+                String descYesterday = (yesterdayValues != null && yesterdayValues.getPrecipitationProbability() != null)
+                        ? getPrecipitationDescription(yesterdayValues.getPrecipitationProbability()) : "Hôm qua";
+
+                new InfoDetailDialog(this).show(
+                        R.drawable.rainn, "Khả năng có mưa", precipValueToday,
+                        descToday,
+                        precipValueToday, descToday,
+                        yesterdayPrecipValue, descYesterday);
+            });
         }
+        float currentHumidity = (currentValues.getHumidity() != null) ? currentValues.getHumidity().floatValue() : 0.0f;
+        String humidityValueToday = Math.round(currentHumidity) + "%";
+        String yesterdayHumidityValue = (yesterdayValues != null && yesterdayValues.getHumidity() != null)
+                ? Math.round(yesterdayValues.getHumidity()) + "%" : "N/A";
 
-        // ===== HUMIDITY (Độ ẩm) =====
-        Double humidity = values.getHumidity();
-        String humidityValue = humidity != null ? Math.round(humidity) + "%" : "N/A";
-        String humidityDesc = getHumidityDescription(humidity);
-
-        if(tvHumidityValue != null) tvHumidityValue.setText(humidityValue);
         LinearLayout cardHumidity = findViewById(R.id.cardHumidity);
         if (cardHumidity != null) {
-            cardHumidity.setOnClickListener(
-                    v -> new InfoDetailDialog(this).show("Humidity", humidityValue, humidityDesc, R.drawable.humidity));
+            cardHumidity.setOnClickListener(v -> {
+                String descToday = getHumidityDescription(currentHumidity);
+                String descYesterday = (yesterdayValues != null && yesterdayValues.getHumidity() != null)
+                        ? getHumidityDescription(yesterdayValues.getHumidity().floatValue()) : "Hôm qua";
+
+                new InfoDetailDialog(this).show(
+                        R.drawable.humidity, "Độ ẩm", humidityValueToday,
+                        descToday,
+                        humidityValueToday, descToday,
+                        yesterdayHumidityValue, descYesterday);
+            });
         }
-
-        // ===== WIND (Gió) =====
-        Double windSpeed = values.getWindSpeed();
-        String windValue = windSpeed != null ? String.format("%.1f km/h", windSpeed) : "N/A";
-        String windDesc = getWindDescription(windSpeed);
-
-        if(tvWindValue != null) tvWindValue.setText(windValue);
+        float currentWindSpeed = (currentValues.getWindSpeed() != null) ? currentValues.getWindSpeed().floatValue() : 0.0f;
+        String windValueToday = String.format(Locale.getDefault(), "%.1f km/h", currentWindSpeed);
+        String yesterdayWindValue = (yesterdayValues != null && yesterdayValues.getWindSpeed() != null)
+                ? String.format(Locale.getDefault(), "%.1f km/h", yesterdayValues.getWindSpeed()) : "N/A";
         LinearLayout cardWind = findViewById(R.id.cardWind);
         if (cardWind != null) {
-            cardWind.setOnClickListener(
-                    v -> new InfoDetailDialog(this).show("Wind", windValue, windDesc, R.drawable.wind));
+            cardWind.setOnClickListener(v -> {
+                String descToday = getWindDescription(currentWindSpeed);
+                String descYesterday = (yesterdayValues != null && yesterdayValues.getWindSpeed() != null)
+                        ? getWindDescription(yesterdayValues.getWindSpeed().floatValue()) : "Hôm qua";
+
+                new InfoDetailDialog(this).show(
+                        R.drawable.wind, "Gió", windValueToday,
+                        descToday,
+                        windValueToday, descToday,
+                        yesterdayWindValue, descYesterday);
+            });
         }
-
-        // ===== AQI (Ước lượng từ dữ liệu thời tiết) =====
-        int estimatedAQI = uocLuongAQI(values);
-        String aqiValue = String.valueOf(estimatedAQI);
-        String aqiDesc = getAQIDescription(estimatedAQI);
-
-        if(tvAQIValue != null) tvAQIValue.setText(aqiValue);
+        int aqiToday = uocLuongAQI(currentValues);
+        int yesterdayAQIInt = (yesterdayValues != null) ? uocLuongAQI(yesterdayValues) : -1;
+        String yesterdayAQIValue = (yesterdayAQIInt != -1) ? String.valueOf(yesterdayAQIInt) : "N/A";
+        String yesterdayAQIDesc = (yesterdayAQIInt != -1) ? getAQIShortDescription(yesterdayAQIInt) : "Hôm qua";
 
         LinearLayout cardAQI = findViewById(R.id.cardAQI);
         if (cardAQI != null) {
-            cardAQI.setOnClickListener(
-                    v -> new InfoDetailDialog(this).show(
-                            "Air Quality Index (AQI)",
-                            aqiValue,
-                            aqiDesc + "\n\n⚠️ Ước lượng từ dữ liệu thời tiết (không chính xác 100%)",
-                            R.drawable.ic_aqi));
+            cardAQI.setOnClickListener(v -> new InfoDetailDialog(this).show(
+                    R.drawable.ic_aqi, "Chỉ số AQI", String.valueOf(aqiToday),
+                    getAQIDescription(aqiToday),
+                    String.valueOf(aqiToday), getAQIShortDescription(aqiToday),
+                    yesterdayAQIValue, yesterdayAQIDesc));
         }
     }
-
-    private int uocLuongAQI(RealtimeResponse.Values values) {
+    private int uocLuongAQI(WeatherResponse.Values values) {
         if (values == null)
             return 24;
 
@@ -501,12 +628,70 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 5. CHỈ SỐ UV - UV cao thường đi kèm không khí trong
-        Double uvIndex = values.getUvIndex();
+        Double uvIndex = Double.valueOf(values.getUvIndex());
         if (uvIndex != null && uvIndex > 5) {
             baseAQI -= 10;
         }
 
         // Giới hạn AQI trong khoảng 0-500
+        int estimatedAQI = (int) Math.max(0, Math.min(500, baseAQI));
+
+        return estimatedAQI;
+    }
+
+    private int uocLuongAQI(RealtimeResponse.Values values) {
+        if (values == null)
+            return 24;
+
+        double baseAQI = 24;
+
+        Double visibility = values.getVisibility();
+        if (visibility != null) {
+            if (visibility < 2) {
+                baseAQI += 80;
+            } else if (visibility < 5) {
+                baseAQI += 50;
+            } else if (visibility < 10) {
+                baseAQI += 20;
+            } else if (visibility >= 15) {
+                baseAQI -= 20;
+            }
+        }
+
+        Double humidity = values.getHumidity();
+        if (humidity != null) {
+            if (humidity > 85) {
+                baseAQI += 15;
+            } else if (humidity < 30) {
+                baseAQI += 10;
+            }
+        }
+
+        Integer weatherCode = values.getWeatherCode();
+        if (weatherCode != null) {
+            if (weatherCode >= 4000 && weatherCode < 5000) {
+                baseAQI -= 30;
+            } else if (weatherCode >= 5000 && weatherCode < 6000) {
+                baseAQI -= 25;
+            } else if (weatherCode == 1000 && visibility != null && visibility < 5) {
+                baseAQI += 40;
+            }
+        }
+
+        Double windSpeed = values.getWindSpeed();
+        if (windSpeed != null) {
+            if (windSpeed > 20) {
+                baseAQI -= 15;
+            } else if (windSpeed < 3) {
+                baseAQI += 20;
+            }
+        }
+
+        Double uvIndex = values.getUvIndex();
+        if (uvIndex != null && uvIndex > 5) {
+            baseAQI -= 10;
+        }
+
         int estimatedAQI = (int) Math.max(0, Math.min(500, baseAQI));
 
         return estimatedAQI;
@@ -575,10 +760,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String getPrecipitationDescription(Double probability) {
-        if (probability == null)
-            return "Không có dữ liệu";
-
+    private String getPrecipitationDescription(double probability) {
         if (probability < 10) {
             return "Khả năng mưa rất thấp, thời tiết khô ráo.";
         } else if (probability < 30) {
@@ -592,10 +774,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String getHumidityDescription(Double humidity) {
-        if (humidity == null)
-            return "Không có dữ liệu";
-
+    private String getHumidityDescription(float humidity) {
         if (humidity < 30) {
             return "Độ ẩm thấp, không khí khô.";
         } else if (humidity < 50) {
@@ -609,10 +788,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String getWindDescription(Double windSpeed) {
-        if (windSpeed == null)
-            return "Không có dữ liệu";
-
+    private String getWindDescription(float windSpeed) {
         if (windSpeed < 5) {
             return "Gió rất nhẹ, gần như không có gió.";
         } else if (windSpeed < 15) {
@@ -692,5 +868,38 @@ public class MainActivity extends AppCompatActivity {
 
         dialog.show();
     }
+    private void scheduleDailyWeatherNotification() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, WeatherNotificationReceiver.class);
+        intent.putExtra("api_key", API_KEY);
 
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, 13);
+        calendar.set(Calendar.MINUTE, 49);
+        calendar.set(Calendar.SECOND, 0);
+
+
+        if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
+            calendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        long triggerTime = calendar.getTimeInMillis();
+
+        // ⏰ Lặp lại mỗi 24 giờ (mỗi ngày)
+        long interval = AlarmManager.INTERVAL_DAY;
+
+        alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                interval,
+                pendingIntent
+        );
+    }
 }

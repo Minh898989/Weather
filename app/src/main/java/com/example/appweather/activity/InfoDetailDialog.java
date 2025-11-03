@@ -12,34 +12,46 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 public class InfoDetailDialog {
 
     private final Activity activity;
+    private final BottomSheetDialog dialog;
+
+    private final ImageView imgIcon;
+    private final TextView tvTitle;
+    private final TextView tvValue;
+    private final TextView tvDescription;
+    private final TextView tvTodayValue;
+    private final TextView tvTodayDesc;
+    private final TextView tvYesterdayValue;
+    private final TextView tvYesterdayDesc;
 
     public InfoDetailDialog(Activity activity) {
         this.activity = activity;
-    }
 
-    public void show(String title, String value, String description, int iconResId) {
-        BottomSheetDialog dialog = new BottomSheetDialog(activity);
+        dialog = new BottomSheetDialog(activity);
         View view = LayoutInflater.from(activity).inflate(R.layout.dialog_info_detail, null);
+        dialog.setContentView(view);
 
-        ImageView imgIcon = view.findViewById(R.id.imgIcon);
-        TextView tvTitle = view.findViewById(R.id.tvTitle);
-        TextView tvValue = view.findViewById(R.id.tvValue);
-        TextView tvDescription = view.findViewById(R.id.tvDescription);
-        TextView tvTodayValue = view.findViewById(R.id.tvTodayValue);
-        TextView tvTodayDesc = view.findViewById(R.id.tvTodayDesc);
-        TextView tvYesterdayValue = view.findViewById(R.id.tvYesterdayValue);
-        TextView tvYesterdayDesc = view.findViewById(R.id.tvYesterdayDesc);
+        imgIcon = view.findViewById(R.id.imgIcon);
+        tvTitle = view.findViewById(R.id.tvTitle);
+        tvValue = view.findViewById(R.id.tvValue);
+        tvDescription = view.findViewById(R.id.tvDescription);
+        tvTodayValue = view.findViewById(R.id.tvTodayValue);
+        tvTodayDesc = view.findViewById(R.id.tvTodayDesc);
+        tvYesterdayValue = view.findViewById(R.id.tvYesterdayValue);
+        tvYesterdayDesc = view.findViewById(R.id.tvYesterdayDesc);
+    }
+    public void show(int iconResId, String title, String mainValue, String description,
+                     String todayValue, String todayDesc, String yesterdayValue, String yesterdayDesc) {
 
         imgIcon.setImageResource(iconResId);
         tvTitle.setText(title);
-        tvValue.setText(value);
+        tvValue.setText(mainValue);
         tvDescription.setText(description);
-        tvTodayValue.setText("45");
-        tvTodayDesc.setText("Tốt");
-        tvYesterdayValue.setText("60");
-        tvYesterdayDesc.setText("Trung bình");
 
-        dialog.setContentView(view);
+        tvTodayValue.setText(todayValue);
+        tvTodayDesc.setText(todayDesc);
+        tvYesterdayValue.setText(yesterdayValue);
+        tvYesterdayDesc.setText(yesterdayDesc);
+
         dialog.show();
     }
 }
