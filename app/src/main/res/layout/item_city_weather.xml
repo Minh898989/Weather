@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="4dp"
+    android:background="@android:color/transparent">
+
+    <RelativeLayout
+        android:id="@+id/cityItemContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/city_item_bg_sunny"
+        android:padding="20dp"
+        android:minHeight="120dp">
+        <!-- Delete Button (only show for non-default cities) -->
+        <ImageView
+            android:id="@+id/btnDeleteCity"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:padding="6dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Xóa thành phố"
+            android:visibility="gone"
+            app:tint="#CCFFFFFF" />
+
+        <!-- City Name -->
+        <TextView
+            android:id="@+id/tvCityName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hà Nội"
+            android:textColor="@android:color/white"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true" />
+
+        <!-- Current Time -->
+        <TextView
+            android:id="@+id/tvCurrentTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="16:37"
+            android:textColor="#E0FFFFFF"
+            android:textSize="14sp"
+            android:layout_below="@id/tvCityName"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp" />
+
+        <!-- Temperature -->
+        <TextView
+            android:id="@+id/tvTemperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="27°"
+            android:textColor="@android:color/white"
+            android:textSize="56sp"
+            android:textStyle="bold"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Weather Condition -->
+        <TextView
+            android:id="@+id/tvWeatherCondition"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Có mây vài nơi"
+            android:textColor="#E0FFFFFF"
+            android:textSize="14sp"
+            android:layout_below="@id/tvCurrentTime"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="8dp" />
+
+        <!-- High/Low Temperature -->
+        <TextView
+            android:id="@+id/tvHighLow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="C:28° T:21°"
+            android:textColor="#E0FFFFFF"
+            android:textSize="14sp"
+            android:layout_below="@id/tvWeatherCondition"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="4dp" />
+
+        <!-- Weather Icon -->
+        <ImageView
+            android:id="@+id/ivWeatherIcon"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:src="@drawable/ic_cloudy"
+            android:alpha="0.9" />
+
+        <!-- Loading Indicator -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerInParent="true"
+            android:visibility="gone"
+            android:indeterminateTint="@android:color/white" />
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

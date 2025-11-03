@@ -28,6 +28,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".activity.CityListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppWeather" />
+
         <receiver
             android:name=".activity.WeatherNotificationReceiver"
             android:enabled="true"
