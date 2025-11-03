@@ -14,6 +14,7 @@ import com.example.appweather.model.WeatherResponse;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -49,7 +50,7 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private long lastRequestTimestamp;
-    private static final String API_KEY = "lmyTvA6zxjtNm0ZdzaiKwpZrFFt3X4eV";
+    private static final String API_KEY = "YuhoFpmyMJF1v1e5jxRpQVibP7o67Rql";
 
     LinearLayout hourlyContainer, cityBar;
     TextView tvCity;
@@ -868,43 +869,37 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
     private void scheduleDailyWeatherNotification() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(this, WeatherNotificationReceiver.class);
+        intent.putExtra("api_key", API_KEY);
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+                this,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 9);
-        calendar.set(Calendar.MINUTE, 33);
+        calendar.set(Calendar.HOUR_OF_DAY, 10);
+        calendar.set(Calendar.MINUTE, 53);
         calendar.set(Calendar.SECOND, 0);
+
 
         if (calendar.getTimeInMillis() < System.currentTimeMillis()) {
             calendar.add(Calendar.DAY_OF_YEAR, 1);
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (alarmManager.canScheduleExactAlarms()) {
-                alarmManager.setRepeating(
-                        AlarmManager.RTC_WAKEUP,
-                        calendar.getTimeInMillis(),
-                        AlarmManager.INTERVAL_DAY,
-                        pendingIntent
-                );
-            } else {
-                try {
-                    Intent i = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                    startActivity(i);
-                } catch (Exception e) {
-                    Toast.makeText(this, "Không thể đặt báo thức chính xác", Toast.LENGTH_SHORT).show();
-                }
-            }
-        } else {
-            alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.getTimeInMillis(),
-                    AlarmManager.INTERVAL_DAY,
-                    pendingIntent
-            );
-        }
+        long triggerTime = calendar.getTimeInMillis();
+
+        // ⏰ Lặp lại mỗi 24 giờ (mỗi ngày)
+        long interval = AlarmManager.INTERVAL_DAY;
+
+        alarmManager.setRepeating(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                interval,
+                pendingIntent
+        );
     }
 }

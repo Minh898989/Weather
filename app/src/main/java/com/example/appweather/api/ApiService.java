@@ -1,5 +1,7 @@
 package com.example.appweather.api;
 
+import com.example.appweather.model.AiRequest;
+import com.example.appweather.model.AiSuggestionResponse;
 import com.example.appweather.model.RealtimeResponse;
 import com.example.appweather.model.TimeLineResponse;
 import com.example.appweather.model.TimelineRequest;
@@ -49,4 +51,7 @@ public interface ApiService {
         Call<TimeLineResponse> getTimelines(
                         @Query("apikey") String apiKey,
                         @Body TimelineRequest body);
+        @POST("/ai/suggestion")
+        Call<AiSuggestionResponse> getAiSuggestion(@Body AiRequest request);
 }
+
