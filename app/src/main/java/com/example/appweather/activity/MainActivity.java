@@ -19,17 +19,21 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,8 +43,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 import retrofit2.Call;
@@ -50,7 +56,8 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private long lastRequestTimestamp;
-    private static final String API_KEY = "YuhoFpmyMJF1v1e5jxRpQVibP7o67Rql";
+    private static final String API_KEY = "NoOzK5QBKuyBwsV8pZy5RwQCiMnRpqgD";
+    private static final int REQUEST_CODE_CITY_LIST = 1001;
 
     LinearLayout hourlyContainer, cityBar;
     TextView tvCity;
@@ -64,6 +71,13 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvAQIStatus;
     private ApiService apiService;
     private String currentLocation = "Hà nội";
+    private GestureDetector gestureDetector;
+    private static final int SWIPE_THRESHOLD = 100;
+    private static final int SWIPE_VELOCITY_THRESHOLD = 100;
+
+    public boolean onTouchEvent(MotionEvent event) {
+        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event);
+    }
     public interface HistoryCallback {
         void onSuccess(WeatherResponse.Values yesterdayValues);
         void onFailure(Throwable t);
@@ -92,6 +106,14 @@ public class MainActivity extends AppCompatActivity {
         tvWindValue = findViewById(R.id.tvWindValue);
         tvAQIValue = findViewById(R.id.tvAQIValue);
         tvAQIStatus = findViewById(R.id.tvAQIStatus);
+
+        ScrollView scrollView = findViewById(R.id.scrollContent);
+        scrollView.setOnTouchListener((v, event) -> {
+            gestureDetector.onTouchEvent(event);
+            return false;
+        });
+        // Setup gesture detector cho swipe
+        setupSwipeGesture();
         // Gọi API để lấy dữ liệu thời tiết thật
         layDuLieuThoiTiet(currentLocation);
         layDuLieuThoiTiet5Ngay(currentLocation);
@@ -107,6 +129,67 @@ public class MainActivity extends AppCompatActivity {
         }
 
         iconSettings.setOnClickListener(v -> Toast.makeText(this, "Mở cài đặt thời tiết", Toast.LENGTH_SHORT).show());
+    }
+
+    private void setupSwipeGesture() {
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                float diffX = e2.getX() - e1.getX();
+                float diffY = e2.getY() - e1.getY();
+
+                // Kiểm tra swipe ngang (phải sang trái hoặc trái sang phải)
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffX > 0) {
+                            // Swipe sang phải -> Mở danh sách thành phố
+                            onSwipeRight();
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+        });
+
+        // Áp dụng gesture cho toàn bộ màn hình
+        rootLayout.setOnTouchListener((v, event) -> {
+            gestureDetector.onTouchEvent(event);
+            return false; // Cho phép các view con nhận sự kiện touch
+        });
+    }
+
+    private void onSwipeRight() {
+        // Mở màn hình danh sách thành phố
+        Intent intent = new Intent(MainActivity.this, CityListActivity.class);
+        startActivityForResult(intent, REQUEST_CODE_CITY_LIST);
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_CITY_LIST && resultCode == RESULT_OK && data != null) {
+            String selectedCity = data.getStringExtra("selected_city");
+            if (selectedCity != null) {
+                tvCity.setText(selectedCity + ", Việt Nam");
+                lastRequestTimestamp = System.currentTimeMillis();
+
+                // Cập nhật location và gọi API lại
+                currentLocation = selectedCity;
+                layDuLieuThoiTiet(currentLocation);
+                layDuLieuThoiTiet5Ngay(currentLocation);
+                layVaCapNhatCards(currentLocation);
+
+                Toast.makeText(this, "Đang tải thời tiết " + selectedCity + "...", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void layDuLieuThoiTiet(String location) {
@@ -186,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
         String ngayHienTai = dinhDangISO.format(new Date());
 
         Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_MONTH, 5);
+        cal.add(Calendar.DAY_OF_MONTH, 4);
         String ngayHienTaiCong5Ngay = dinhDangISO.format(cal.getTime());
 
         TimelineRequest requestBody = new TimelineRequest(
@@ -881,8 +964,8 @@ public class MainActivity extends AppCompatActivity {
         );
 
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 10);
-        calendar.set(Calendar.MINUTE, 53);
+        calendar.set(Calendar.HOUR_OF_DAY,9);
+        calendar.set(Calendar.MINUTE, 52);
         calendar.set(Calendar.SECOND, 0);
 
 
