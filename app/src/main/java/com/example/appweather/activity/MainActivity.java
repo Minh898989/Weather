@@ -518,53 +518,104 @@ public class MainActivity extends AppCompatActivity {
         return "Rất nguy hại";
     }
 
+    private static final long MIN_REQUEST_INTERVAL = 1000;
+    private long lastHistoryRequestTime = 0;
+    private Map<String, WeatherResponse.Values> historyCache = new HashMap<>();
+
     private void layDuLieuLichSu(String location, HistoryCallback callback) {
+        final String requestLocation = location;
+
+        if (historyCache.containsKey(location)) {
+            Log.d(TAG, "Sử dụng dữ liệu cache cho " + location);
+            callback.onSuccess(historyCache.get(location));
+            return;
+        }
+
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastHistoryRequestTime < MIN_REQUEST_INTERVAL) {
+            Log.d(TAG, "Request quá nhanh, đợi " + MIN_REQUEST_INTERVAL + "ms");
+            new Handler().postDelayed(() ->
+                            layDuLieuLichSu(location, callback),
+                    MIN_REQUEST_INTERVAL
+            );
+            return;
+        }
+        lastHistoryRequestTime = currentTime;
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
 
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+        calendar.add(Calendar.DAY_OF_YEAR, -1);
+        calendar.set(Calendar.HOUR_OF_DAY, 12);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
 
-        calendar.add(Calendar.HOUR, -24);
+        String startTime = sdf.format(calendar.getTime());
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
         String endTime = sdf.format(calendar.getTime());
 
-        calendar.add(Calendar.HOUR, -1);
-        String startTime = sdf.format(calendar.getTime());
+        Log.d(TAG, "Request history cho " + requestLocation + " từ " + startTime + " đến " + endTime);
 
-        Log.d(TAG, "Đang lấy dữ liệu lịch sử từ " + startTime + " đến " + endTime);
+        apiService.getForecastHistory(
+                location,
+                API_KEY,
+                "metric",
+                "1h",
+                startTime,
+                endTime
+        ).enqueue(new Callback<WeatherResponse>() {
+            private int retryCount = 0;
+            private static final int MAX_RETRIES = 3;
 
-        apiService.getForecastHistory(location, API_KEY, "metric", "1h", startTime, endTime)
-                .enqueue(new Callback<WeatherResponse>() {
-                    @Override
-                    public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getTimelines() != null && !response.body().getTimelines().isEmpty()) {
-                            var timeline = response.body().getTimelines();
-                            var interval = timeline.get(0);
+            @Override
+            public void onResponse(Call<WeatherResponse> call, Response<WeatherResponse> response) {
+                if (!location.equals(currentLocation)) {
+                    Log.d(TAG, "Bỏ qua response cũ");
+                    return;
+                }
 
-                            if (interval != null) {
-                                Log.d(TAG, "✅ Lấy dữ liệu lịch sử thành công.");
-                                callback.onSuccess(interval.getValues());
-                            } else {
-                                callback.onFailure(new Exception("Dữ liệu lịch sử (interval) trả về null."));
-                            }
-                        } else {
-                            try {
-                                String errorMsg = "Lỗi khi lấy dữ liệu lịch sử: " + response.code();
-                                if (response.errorBody() != null) errorMsg += " - " + response.errorBody().string();
-                                Log.e(TAG, errorMsg);
-                                callback.onFailure(new Exception(errorMsg));
-                            } catch (Exception e) {
-                                callback.onFailure(e);
-                            }
-                        }
+                if (response.code() == 429) {
+                    if (retryCount < MAX_RETRIES) {
+                        retryCount++;
+                        Log.d(TAG, "Nhận mã 429, thử lại lần " + retryCount + " sau " + (retryCount * 1000) + "ms");
+                        new Handler().postDelayed(() ->
+                                        call.clone().enqueue(this),
+                                retryCount * 1000
+                        );
+                        return;
                     }
+                }
 
-                    @Override
-                    public void onFailure(Call<WeatherResponse> call, Throwable t) {
-                        Log.e(TAG, "API lịch sử thất bại", t);
-                        callback.onFailure(t);
-                    }
-                });
+                if (!response.isSuccessful() || response.body() == null) {
+                    callback.onFailure(new Exception("API error: " + response.code()));
+                    return;
+                }
+
+                WeatherResponse.Timelines timelines = response.body().getTimelines();
+                if (timelines == null || timelines.isEmpty()) {
+                    callback.onFailure(new Exception("No timeline data"));
+                    return;
+                }
+
+                WeatherResponse.TimelineData data = timelines.get(0);
+                if (data != null && data.getValues() != null) {
+                    // Cache dữ liệu
+                    historyCache.put(location, data.getValues());
+                    callback.onSuccess(data.getValues());
+                } else {
+                    callback.onFailure(new Exception("Null values"));
+                }
+            }
+
+            @Override
+            public void onFailure(Call<WeatherResponse> call, Throwable t) {
+                Log.e(TAG, "API call failed", t);
+                callback.onFailure(t);
+            }
+        });
     }
+
 
     private void updateCardDisplayValues(RealtimeResponse.Values currentValues) {
         String precipValueToday = (currentValues.getPrecipitationProbability() != null)
